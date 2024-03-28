@@ -1,0 +1,274 @@
+﻿@page "/"
+@using DevExpress.Drawing;
+@using DevExpress.XtraRichEdit;
+@using DevExpress.XtraRichEdit.API.Native;
+@using Newtonsoft.Json;
+@using DevExpress.Blazor
+@inject IJSRuntime JS
+
+<script>
+    window.downloadFileFromStream = async (fileName, contentStreamReference) => {
+        const arrayBuffer = await contentStreamReference.arrayBuffer();
+        const blob = new Blob([arrayBuffer]);
+        const url = URL.createObjectURL(blob);
+        const anchorElement = document.createElement('a');
+        anchorElement.href = url;
+        anchorElement.download = fileName ?? '';
+        anchorElement.click();
+        anchorElement.remove();
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+<div class="container">
+    <div class="card mt-3">
+        <div class="card-header">
+            Word Processing Document API Font Finder
+        </div>
+        <div class="card-body px-0">
+            <DxFormLayout>
+                <DxFormLayoutItem ColSpanMd="12">
+                    <Template>
+                        <p class="ml-3 mr-3">
+                            This sample detects and loads fonts used within a specified document. To detect fonts and display it in the “Fonts Used” table, select the desired document within the “Upload File” field.
+                        </p>
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem>
+                    <Template>
+                        <div class="input-group ml-3 mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Upload File</span>
+                            </div>
+                            <div class="custom-file">
+                                <InputFile OnChange="@LoadFile" class="custom-file-input"></InputFile>
+                                <label class="custom-file-label">Choose File</label>
+                            </div>
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+            </DxFormLayout>
+            @if (isLoading)
+            {
+                <p class="ml-3 mb-3">Uploading...</p>
+            }
+            else
+            {
+                @if (fontNameList.Count > 0)
+                {
+                    <div class="col">
+                        <DxDataGrid Data="@fontNameList"
+                                    SelectionMode="DataGridSelectionMode.None"
+                                    ShowPager="false">
+                            <DxDataGridColumn Field="@nameof(FontInfo.FontName)" Caption="Fonts Used within the Selected Document:" />
+                            <DxDataGridColumn Width="300px">
+                                <DisplayTemplate>
+                                    @{
+                                        var font = context as FontInfo;
+                                        @if (font != null)
+                                        {
+                                            @if (font.IsLoaded)
+                                            {
+                                                <div>Font loaded</div>
+                                            }
+                                            else
+                                            {
+                                                <DxButton Text="Load from Google Fonts"
+                                                          CssClass="btn-block"
+                                                          Click="@((MouseEventArgs args) => LoadFont(font))" />
+                                            }
+                                        }
+                                    }
+                                </DisplayTemplate>
+                            </DxDataGridColumn>
+                        </DxDataGrid>
+
+                        <DxFormLayout>
+                            <DxFormLayoutItem ColSpanMd="2">
+                                <Template>
+                                    <DxButton Text="Download as PDF"
+                                              CssClass="btn-block mt-3"
+                                              Click="@((MouseEventArgs args) => DownloadAsPdf())" />
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="7">
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="3">
+                                <Template>
+                                    <DxButton Text="Load All Fonts from Google Fonts"
+                                              CssClass="btn-block mt-3"
+                                              Click="@((MouseEventArgs args) => LoadAllFonts())" />
+                                </Template>
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    bool isLoading;
+    RichEditDocumentServer server = new();
+    List<FontInfo> fontNameList = new List<FontInfo>();
+
+    async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        isLoading = true;
+        await using MemoryStream fs = new();
+        await e.File.OpenReadStream().CopyToAsync(fs);
+        server.LoadDocument(fs);
+        GetDocumentFontList();
+        isLoading = false;
+    }
+
+    void LoadAllFonts()
+    {
+        foreach (var font in fontNameList)
+            LoadFont(font);
+    }
+    void LoadFont(FontInfo font)
+    {
+        byte[]? fontData = FontLoader.LoadFontFromGoogle(font.FontName);
+        if (fontData != null && fontData.Length != 0)
+        {
+            DXFontRepository.Instance.AddFont(fontData);
+            font.IsLoaded = true;
+        }
+    }
+
+    async Task DownloadAsPdf()
+    {
+        var outputStream = new MemoryStream();
+        server.ExportToPdf(outputStream);
+        outputStream.Position = 0;
+
+        using var streamRef = new DotNetStreamReference(outputStream);
+        await JS.InvokeVoidAsync("downloadFileFromStream", "result.pdf", streamRef);
+    }
+
+    void GetDocumentFontList()
+    {
+        DocumentFontsVisitor visitor = new DocumentFontsVisitor(fontNameList);
+        DocumentIterator iterator = new DocumentIterator(server.Document, true);
+        while (iterator.MoveNext())
+            iterator.Current.Accept(visitor);
+    }
+
+    public class FontInfo
+    {
+        public FontInfo(string fontName)
+        {
+            FontName = fontName;
+        }
+        public string FontName { get; private set; }
+        public bool IsLoaded { get; set; }
+    }
+
+    public class DocumentFontsVisitor : DocumentVisitorBase
+    {
+        List<FontInfo> fonts;
+        public DocumentFontsVisitor(List<FontInfo> fonts)
+        {
+            this.fonts = fonts;
+        }
+
+        public override void Visit(DocumentText text)
+        {
+            AddToList(text.TextProperties.FontName);
+        }
+        public override void Visit(DocumentParagraphEnd paragraphEnd)
+        {
+            AddToList(paragraphEnd.TextProperties.FontName);
+        }
+        void AddToList(string fontName)
+        {
+            if (fonts.Find(f => f.FontName == fontName) == null)
+                fonts.Add(new FontInfo(fontName));
+        }
+    }
+
+    public class FontLoader
+    {
+        const string apiKey = "AIzaSyDDl-4RWshMIfYToaTe5IRQGYfV5BvLGUU";
+        const string fontApiUrl = $"https://www.googleapis.com/webfonts/v1/webfonts/?key={apiKey}";
+
+        public static byte[]? LoadFontFromGoogle(string fontName)
+        {
+            string fontUrl = $"{fontApiUrl}&family={fontName}";
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    return Task.Run(async () =>
+                    {
+                        HttpResponseMessage response = await client.GetAsync(fontUrl);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            Console.WriteLine(response.StatusCode);
+                            return null;
+                        }
+                        string content = await response.Content.ReadAsStringAsync();
+                        MyFontList? webfontList = JsonConvert.DeserializeObject<MyFontList>(content);
+                        if (webfontList is not null)
+                            return LoadFontFile(webfontList.Items[0].Files.Regular);
+                        return null;
+                    }).GetAwaiter().GetResult();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+            return null;
+        }
+        static byte[]? LoadFontFile(string fontUrl)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    return Task.Run(async () =>
+                    {
+                        HttpResponseMessage response = await client.GetAsync(fontUrl);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            Console.WriteLine(response.StatusCode);
+                            return null;
+                        }
+                        using (MemoryStream fileStream = new MemoryStream())
+                        {
+                            await response.Content.CopyToAsync(fileStream);
+                            byte[] result = new byte[fileStream.Length];
+                            fileStream.Position = 0;
+                            fileStream.Read(result, 0, (int)fileStream.Length);
+                            return result;
+                        }
+                    }).GetAwaiter().GetResult();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+            return null;
+        }
+
+        private class MyFont
+        {
+            public string Family { get; set; }
+            public string Menu { get; set; }
+            public Files Files { get; set; }
+        }
+
+        private class MyFontList
+        {
+            public List<MyFont> Items { get; set; }
+        }
+        private class Files
+        {
+            public string Regular { get; set; }
+        }
+    }
+}
