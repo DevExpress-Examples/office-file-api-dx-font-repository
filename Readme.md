@@ -2,8 +2,8 @@
 
 The following example detects and loads custom fonts used within a document. The application obtains a list of all fonts used in the document and loads them from the [Google Fonts](https://fonts.google.com/) resource, when required. Loaded fonts are added to the [DXFontRepository](https://docs.devexpress.com/CoreLibraries/DevExpress.Drawing.DXFontRepository) automatically and made available without additional installation requirements.
 
->![**Note**]
-> Google Fonts are open-source, but be sure to read the associated license agreement to determine usage rights for your particular use case.
+>[!Note]
+> Google Fonts are open-source, but read the associated license agreement to determine usage rights for your particular use case.
 
 ![image](./media/font-repository-office-file-api.png)
 
