@@ -57,14 +57,13 @@
                 @if (fontNameList.Count > 0)
                 {
                     <div class="col">
-                        <DxDataGrid Data="@fontNameList"
-                                    SelectionMode="DataGridSelectionMode.None"
-                                    ShowPager="false">
-                            <DxDataGridColumn Field="@nameof(FontInfo.FontName)" Caption="Fonts Used within the Selected Document:" />
-                            <DxDataGridColumn Width="300px">
-                                <DisplayTemplate>
+                        <DxGrid Data="@fontNameList"
+                            PagerVisible="false">
+                            <DxGridDataColumn FieldName="@nameof(FontInfo.FontName)" Caption="Fonts Used within the Selected Document:" />
+                            <DxGridDataColumn Width="300px">
+                                <CellDisplayTemplate>
                                     @{
-                                        var font = context as FontInfo;
+                                        var font = context.DataItem as FontInfo;
                                         @if (font != null)
                                         {
                                             @if (font.IsLoaded)
@@ -79,9 +78,9 @@
                                             }
                                         }
                                     }
-                                </DisplayTemplate>
-                            </DxDataGridColumn>
-                        </DxDataGrid>
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                        </DxGrid>
 
                         <DxFormLayout>
                             <DxFormLayoutItem ColSpanMd="2">
