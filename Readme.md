@@ -9,7 +9,7 @@
 The following example detects and loads custom fonts used within a document. The application obtains a list of all fonts used in the document and loads them from the [Google Fonts](https://fonts.google.com/) resource, when required. Loaded fonts are added to the [DXFontRepository](https://docs.devexpress.com/CoreLibraries/DevExpress.Drawing.DXFontRepository) automatically and made available without additional installation requirements.
 
 >[!Note]
-> Google Fonts are open-source, but read the associated license agreement to determine usage rights for your particular use case.
+> Google Fonts are open-source, but read the license agreement to determine usage rights for your particular use case.
 
 ![image](./media/font-repository-office-file-api.png)
 
@@ -18,6 +18,10 @@ The following example detects and loads custom fonts used within a document. The
 The application uses the [DocumentIterator API](https://docs.devexpress.com/OfficeFileAPI/DevExpress.XtraRichEdit.API.Native.DocumentIterator) to detect fonts used in a document loaded to the [RichEditDocumentServer](https://docs.devexpress.com/OfficeFileAPI/DevExpress.XtraRichEdit.RichEditDocumentServer) instance. The application lists them in a table. You can click **Load From Google Fonts** button for an individual font or click **Load all Fonts from Google Fonts** to download all.
 
 The fonts are loaded from Google Fonts and added to the [DXFontRepository](https://docs.devexpress.com/CoreLibraries/DevExpress.Drawing.DXFontRepository). When all fonts are added to the font collection, click the **Download as PDF** button to open the resulting document in PDF format.
+
+
+> [!Important]  
+> The Universal Subscription or an additional Office File API Subscription is required to use this example in production code. For pricing information, please refer to the [DevExpress Subscription](https://www.devexpress.com/Subscriptions/) page. 
 
 ## Files to Review
 
