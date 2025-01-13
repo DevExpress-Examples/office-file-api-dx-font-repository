@@ -1,5 +1,5 @@
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-bullseye-slim AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
@@ -8,13 +8,13 @@ EXPOSE 443
 RUN apt update &&\
          apt install -y libc6 libicu-dev libfontconfig1
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0-bullseye-slim AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build
 
 
 
 
 ## Build runtime image
-#FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS base
+#FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 #WORKDIR /app
 #EXPOSE 80
 #EXPOSE 443
@@ -25,15 +25,17 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0-bullseye-slim AS build
 #
 #ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 #
-#FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
+#FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 
 
 
 
 WORKDIR /src
  
+# DX
 # Specify your DevExpress NuGet Feed URL as the package source
-RUN dotnet nuget add source https://nuget.devexpress.com/{your-authorization-token}/api
+RUN --mount=type=secret,id=dxnuget dotnet nuget add source $(cat /run/secrets/dxnuget) -n devexpress-nuget
+# /DX
 # Copy the project file
 COPY ["DXRepository.csproj", "."]
  

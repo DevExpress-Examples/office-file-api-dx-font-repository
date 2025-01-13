@@ -7,12 +7,13 @@
     <UserSecretsId>7106e7af-d1cf-4a90-9dad-25a1c3352b52</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
+    <DockerfileBuildArguments>--secret id=dxnuget,source=secrets.dev.yaml</DockerfileBuildArguments>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DevExpress.Blazor" Version="24.1.5" />
-    <PackageReference Include="DevExpress.Document.Processor" Version="24.1.5" />
-    <PackageReference Include="DevExpress.Drawing.Skia" Version="24.1.5" />
+    <PackageReference Include="DevExpress.Blazor" Version="24.2.3" />
+    <PackageReference Include="DevExpress.Document.Processor" Version="24.2.3" />
+    <PackageReference Include="DevExpress.Drawing.Skia" Version="24.2.3" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
