@@ -19,7 +19,6 @@ The application uses the [DocumentIterator API](https://docs.devexpress.com/Offi
 
 The fonts are loaded from Google Fonts and added to the [DXFontRepository](https://docs.devexpress.com/CoreLibraries/DevExpress.Drawing.DXFontRepository). When all fonts are added to the font collection, click the **Download as PDF** button to open the resulting document in PDF format.
 
-
 > [!Important]  
 > The Universal Subscription or an additional Office File API Subscription is required to use this example in production code. For pricing information, please refer to the [DevExpress Subscription](https://www.devexpress.com/Subscriptions/) page. 
 
