@@ -7,7 +7,6 @@
     <UserSecretsId>7106e7af-d1cf-4a90-9dad-25a1c3352b52</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
-    <DockerfileBuildArguments>--secret id=dxnuget,source=secrets.dev.yaml</DockerfileBuildArguments>
   </PropertyGroup>
 
   <ItemGroup>
